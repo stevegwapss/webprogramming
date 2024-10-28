@@ -1,9 +1,11 @@
 $(document).ready(function(){
     $('.nav-link').on('click', function(e){
+        // this is for setting the 'clicked' state
         e.preventDefault()
         $('.nav-link').removeClass('link-active')
         $(this).addClass('link-active')
         
+        // this changes the url based on the nav-linked that is clicked
         let url = $(this).attr('href')
         window.history.pushState({path: url}, '', url)
     })
@@ -18,11 +20,19 @@ $(document).ready(function(){
         viewProducts()
     })
 
+    $('#accounts-link').on('click', function(e){
+        e.preventDefault()
+        viewAccounts()
+    })
+
+    // setting the defaults
     let url = window.location.href;
     if (url.endsWith('dashboard')){
         $('#dashboard-link').trigger('click')
     }else if (url.endsWith('products')){
         $('#products-link').trigger('click')
+    }else if (url.endsWith('accounts')){
+        $('#accounts-link').trigger('click')
     }else{
         $('#dashboard-link').trigger('click')
     }
@@ -60,7 +70,7 @@ $(document).ready(function(){
                 beginAtZero: true,
                 max: 10000,
                 ticks: {
-                    stepSize: 2000
+                    stepSize: 2000  // Set step size to 2000
                 }
             }
             }
@@ -77,11 +87,12 @@ $(document).ready(function(){
                 $('.content-page').html(response)
 
                 var table = $('#table-products').DataTable({
-                    dom: 'rtp',
+                    dom: 'lftiprB',
                     pageLength: 10,
                     ordering: false,
                 });
 
+                // Bind custom input to DataTable search
                 $('#custom-search').on('keyup', function() {
                     table.search(this.value).draw()
                 });
@@ -101,6 +112,24 @@ $(document).ready(function(){
         })
     }
 
+    function viewAccounts(){
+        $.ajax({
+            type: 'GET',
+            url: '../products/view-accounts.php',
+            dataType: 'html',
+            success: function(response){
+                $('.content-page').html(response)
+
+                var table = $('#table-products').DataTable({
+                    dom: 'lfrtip',
+                    pageLength: 10,
+                    ordering: false,
+                });
+
+            }
+        })
+    }
+
     function addProduct(){
         $.ajax({
             type: 'GET',
@@ -108,7 +137,7 @@ $(document).ready(function(){
             dataType: 'html',
             success: function(view){
                 $('.modal-container').html(view)
-                $('#modal-add-product').modal('show')
+                $('#staticBackdrop').modal('show')
 
                 fetchCategories()
 
@@ -121,16 +150,14 @@ $(document).ready(function(){
     }
 
     function saveProduct(){
-        let form = new FormData($('#form-add-product')[0])
         $.ajax({
             type: 'POST',
-            url: '../products/add-product.php',
-            data: form,
-            dataType: 'json',
-            processData: false,
-            contentType: false,
+            url: '../products/add-product.php',  // Make sure this points to your PHP handler
+            data: $('form').serialize(),         // Serialize the form data
+            dataType: 'json',                    // Expect a JSON response
             success: function(response) {
                 if (response.status === 'error') {
+                    // Display validation errors for each field
                     if (response.codeErr) {
                         $('#code').addClass('is-invalid');
                         $('#code').next('.invalid-feedback').text(response.codeErr).show();
@@ -155,15 +182,11 @@ $(document).ready(function(){
                     }else{
                         $('#price').removeClass('is-invalid');
                     }
-                    if (response.imageErr) {
-                        $('#product_image').addClass('is-invalid');
-                        $('#product_image').next('.invalid-feedback').text(response.imageErr).show();
-                    }else{
-                        $('#product_image').removeClass('is-invalid');
-                    }
                 } else if (response.status === 'success') {
-                    $('#modal-add-product').modal('hide');
-                    $('#form-add-product')[0].reset();
+                    // Hide the modal and reset the form on success
+                    $('#staticBackdrop').modal('hide');
+                    $('form')[0].reset();  // Reset the form
+                    // Optionally, redirect to the product listing page or display a success message
                     viewProducts()
                 }
             }

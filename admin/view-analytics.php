@@ -1,3 +1,6 @@
+<?php
+require_once '../admin/ajaxrequest.php';
+?>
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
